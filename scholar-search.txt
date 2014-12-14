@@ -1,0 +1,2262 @@
+﻿'ssf-begin
+';
+
+'workbook
+'   name;scholar-search.xlsm/F3XScholarSearch
+
+'book-identity
+'  title;Scholar Search
+'  description;Web search helper for books and papers
+
+'require
+'       ;{0D452EE1-E08F-101A-852E-02608C4D0BB4} 2 0 Microsoft Forms 2.0 Object Library
+'       ;{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B} 1 1 Microsoft Internet Controls
+'       ;{00000205-0000-0010-8000-00AA006D2EA4} 2 5 Microsoft ActiveX Data Objects 2.5 Library
+'       ;{420B2830-E718-11CF-893D-00A0C9054228} 1 0 Microsoft Scripting Runtime
+
+'cells-name
+'       ;=scholar_search!R15C1
+'       ;scholar_search!_ButtonCaption
+'       ;=scholar_search!R3C2
+'       ;scholar_search!_Comment
+'       ;=scholar_search!R6C2
+'       ;scholar_search!_Contributor
+'       ;=scholar_search!R4C2
+'       ;scholar_search!_Copyright
+'       ;=scholar_search!R5C2
+'       ;scholar_search!_License
+'       ;=scholar_search!R2C2
+'       ;scholar_search!_LocalComment
+'       ;=scholar_search!R1C2
+'       ;scholar_search!_PublicName
+'       ;=scholar_search!R7C2
+'       ;scholar_search!_Since
+'       ;=scholar_search!R10C2
+'       ;scholar_search!_Tag
+'       ;=scholar_search!R9C2
+'       ;scholar_search!_Timestamp
+'       ;=scholar_search!R8C2
+'       ;scholar_search!_Url
+
+'worksheet
+'   name;scholar_search/BaumMain
+
+'cells-formula
+'  address;A1:B10
+'         ;名称
+'         ;scholar-search
+'         ;コメント
+'         ;学術論文や文献のWeb検索を手助けする
+'         ;comment
+'         ;Web search helper for books and papers
+'         ;著作権
+'         ;="Copyright (C) " &R[3]C & "-" & YEAR(R[5]C) & " " & R[2]C
+'         ;ライセンス
+'         ;自律, 自由, 公正, http://paidforeveryone.wordpress.com
+'         ;作者
+'         ;Tomizono - mocvba.com
+'         ;初版
+'         ;2014
+'         ;配布元
+'         ;https://github.com/osubera/scholar-search
+'         ;更新
+'         ;41981.5416666667
+'         ;keyword
+'         ;excel, book, journal, paper, article, library
+'  address;A13:J13
+'         ;ボタンの表示
+'         ;ボタンの機能
+'         ;Tag
+'         ;Parameter
+'         ;ControlType
+'         ;Style
+'         ;Width
+'         ;Group
+'         ;Action
+'         ;Initialize ..
+'  address;A15:J21
+'   repeat;2
+'         ;Google
+'         ;google
+'     skip;1
+'         ;1
+'         ;2
+'     skip;4
+'         ;Scholar
+'         ;Google Scholar
+'         ;googlescholar
+'     skip;1
+'         ;1
+'         ;2
+'     skip;4
+'         ;Book
+'         ;Google Book
+'         ;googlebook
+'     skip;1
+'         ;1
+'         ;2
+'     skip;1
+'         ;1
+'     skip;2
+'   repeat;2
+'         ;Amazon
+'         ;amazon
+'     skip;1
+'         ;1
+'         ;2
+'     skip;1
+'         ;1
+'     skip;2
+'         ;Cambridge
+'         ;Cambridge Library Search +
+'         ;cambridgeplus
+'     skip;1
+'         ;1
+'         ;2
+'     skip;1
+'         ;1
+'     skip;2
+'         ;Head
+'         ;Number of strings from head
+'         ;head
+'     skip;1
+'         ;2
+'         ; 
+'     skip;1
+'         ;1
+'     skip;1
+'         ;0
+'         ;Reset
+'         ;Restart Browser
+'         ;reset
+'     skip;1
+'         ;1
+'         ;2
+
+'cells-numberformat
+'  address;B9
+'         ;m/d/yyyy h:mm
+
+'cells-width
+'   unit;pt
+'  address;B1
+'         ;96.75
+
+'cells-v-align
+'  address;A1:J21
+'   repeat;210
+'         ;center
+
+'code
+'   name;BaumMain
+'{{{
+Option Explicit
+
+' BaumMain addin for ToolBarV2
+
+' using a excel worksheet as a property holder
+
+' we do not support popup on excel sheet at this moment
+' no ideas how to describe it wisely on 2 dimensional sheet
+
+Private Helper As ToolBarV2
+Private IeHelper As BrowserHelper
+
+Friend Function VBProjectName() As String
+    ' VBProject.Name can't be accessed for the default settings.
+    VBProjectName = "F3XScholarSearch"
+End Function
+
+Friend Function GetHelper() As ToolBarV2
+    Set GetHelper = Helper
+End Function
+
+Friend Function GetIeHelper() As BrowserHelper
+    Set GetIeHelper = IeHelper
+End Function
+
+Friend Sub InitializeIeHelper()
+    Set IeHelper = New BrowserHelper
+End Sub
+
+Friend Sub TerminateIeHelper()
+    Set IeHelper = Nothing
+End Sub
+
+'=== default main procedures begin ===
+
+
+' this will called by pressing a button
+Public Sub BarMain(Optional oWho As Object = Nothing)
+    If Helper Is Nothing Then
+        BarInitialize
+        InitializeIeHelper
+        'MsgBox "ツールバーを修復しました。もう一度操作してください。", vbExclamation, BaumMain.Name
+    Else
+        If IeHelper Is Nothing Then InitializeIeHelper
+        Helper.BarMain Me
+    End If
+End Sub
+
+Public Sub OnButtonToggle()
+    Helper.OnButtonToggle
+End Sub
+
+' followings need to be public, because they are called from outside by the Helper
+' we also can copy the Helper.BarMain code here, and let the followings be private.
+
+Public Sub Menu_google(oAC As Object)
+    Dim Ra As Object
+    
+    Set Ra = Selection
+    If TypeName(Ra) <> "Range" Then Exit Sub
+    IeHelper.Google Ra, GetUserOptions
+End Sub
+
+Public Sub Menu_googlescholar(oAC As Object)
+    Dim Ra As Object
+    
+    Set Ra = Selection
+    If TypeName(Ra) <> "Range" Then Exit Sub
+    IeHelper.GoogleScholar Ra, GetUserOptions
+End Sub
+
+Public Sub Menu_googlebook(oAC As Object)
+    Dim Ra As Object
+    
+    Set Ra = Selection
+    If TypeName(Ra) <> "Range" Then Exit Sub
+    IeHelper.GoogleBook Ra, GetUserOptions
+End Sub
+
+Public Sub Menu_amazon(oAC As Object)
+    Dim Ra As Object
+    
+    Set Ra = Selection
+    If TypeName(Ra) <> "Range" Then Exit Sub
+    IeHelper.Amazon Ra, GetUserOptions
+End Sub
+
+Public Sub Menu_cambridgeplus(oAC As Object)
+    Dim Ra As Object
+    
+    Set Ra = Selection
+    If TypeName(Ra) <> "Range" Then Exit Sub
+    IeHelper.CambridgePlus Ra, GetUserOptions
+End Sub
+
+Public Sub Menu_head(oAC As Object)
+
+End Sub
+
+Public Sub Menu_reset(oAC As Object)
+    IeHelper.RestartBrowser
+End Sub
+
+Public Function GetUserOptions() As Variant
+    Dim HeadLength As Long
+    HeadLength = Int(Val(Helper.GetControlText("head")))
+    GetUserOptions = Array(HeadLength)
+End Function
+
+'Public Sub Menu_edit(oAC As Object)
+'    Dim Ws As Worksheet
+'
+'    If TypeName(ActiveSheet) <> "Worksheet" Then Exit Sub
+'    Set Ws = ActiveSheet
+'    CompareHelper.SetEditSheet Ws, oAC
+'End Sub
+'
+'Public Sub Menu_validate(oAC As Object)
+'    CompareHelper.DoValidate
+'End Sub
+'
+'Public Sub Menu_summary(oAC As Object)
+'    CompareHelper.JumpTo
+'End Sub
+'
+'Public Sub Menu_form(oAC As Object)
+'    CompareSheetForm.ShowVerifyCharForm
+'End Sub
+'
+'Public Sub Menu_reset(oAC As Object)
+'    CompareSheetForm.ResetWindowsInTaskbar
+'
+'    If MsgBox("設定を消去して、初期状態にしてよいですか？", vbOKCancel, "解除ボタンが押されました") = vbCancel Then Exit Sub
+'    CompareSheetForm.CloseVerifyCharForm
+'    CompareHelper.ClearSettings
+'End Sub
+
+
+'=== default main procedures end ===
+'=== button data begin ===
+
+Public Property Get ButtonData() As Variant
+    ButtonData = ConvertRangeToArray(Application.Intersect(GetButtonRow, GetButtonCol))
+End Property
+
+Public Property Get ButtonParent() As Variant
+    ButtonParent = Array(VBProjectName & "." & Me.CodeName)
+End Property
+
+' above simple property codes are supported by the following range helpers
+
+Private Function GetButtonRow(Optional Address As String = "_ButtonCaption") As Range
+    Dim out As Range
+    Dim StartAt As Range
+    
+    Set StartAt = Me.Range(Address)
+    If IsEmpty(StartAt.Offset(1, 0).Value) Then
+        Set out = StartAt
+    Else
+        Set out = Me.Range(StartAt, StartAt.End(xlDown))
+    End If
+    
+    Set GetButtonRow = out.EntireRow
+End Function
+
+Private Function GetButtonCol(Optional Address As String = "_ButtonCaption") As Range
+    Dim StartAt As Range
+    Set StartAt = Me.Range(Address)
+    Set GetButtonCol = Me.Range(StartAt, StartAt.SpecialCells(xlCellTypeLastCell)).EntireColumn
+End Function
+
+Private Function ConvertRangeToArray(Ra As Range) As Variant
+    Dim out() As Variant
+    Dim i As Long
+    
+    ReDim out(0 To Ra.Rows.Count - 1)
+    For i = 0 To UBound(out)
+        out(i) = Ra.Rows(i + 1).Value
+    Next
+    
+    ConvertRangeToArray = out
+End Function
+
+
+'=== button data end ===
+'=== constructor / destructor begin ===
+
+
+Private Function BarName() As String
+    BarName = Me.Name & Me.Range("_PublicName").Text & Me.Range("_Timestamp").Text
+End Function
+
+Public Sub BarInitialize()
+    Dim vMe As Variant
+    Set vMe = Me
+    Set Helper = New ToolBarV2
+    Helper.SetName BarName
+    Helper.NewBar vMe
+End Sub
+
+Public Sub BarTerminate()
+    On Error Resume Next
+    Helper.DelBar
+    Set Helper = Nothing
+End Sub
+
+
+'=== constructor / destructor end ===
+
+'}}}
+
+'class
+'   name;ToolBarV2
+'{{{
+Option Explicit
+
+' Generate an application toolbar
+
+Private MyBar As Office.CommandBar
+Private MyName As String
+Private MyApp As Application
+
+
+'=== main procedures helper begin ===
+
+
+' this will called by pressing a button
+Friend Sub BarMain(Optional oWho As Object = Nothing)
+    Dim oAC As Object   ' this is the button itself pressed
+    Set oAC = Application.CommandBars.ActionControl
+    If oAC Is Nothing Then Exit Sub
+    ' switch to a main menu procedure
+    Main oAC, SomebodyOrMe(oWho)
+    Set oAC = Nothing
+End Sub
+
+' main menu procedure. if you delete this, a public Main in Standard Module will be called, maybe.
+Private Sub Main(oAC As Object, Optional oWho As Object = Nothing)
+    ' use a button tag to switch a procedure to be called as "Menu_xx"
+    CallByName SomebodyOrMe(oWho), "Menu_" & oAC.Tag, VbMethod, oAC
+End Sub
+
+Public Sub Menu_about(oAC As Object)
+    MsgBox TypeName(Me), vbOKOnly, "Sample of procedure called by the Main"
+End Sub
+
+Friend Sub OnButtonToggle()
+    Dim oAC As Object   ' toggle this button
+    Set oAC = Application.CommandBars.ActionControl
+    If oAC Is Nothing Then Exit Sub
+    
+    ButtonSwitchToggle oAC
+    Set oAC = Nothing
+End Sub
+
+Private Function SomebodyOrMe(oWho As Object) As Object
+    If oWho Is Nothing Then
+        Set SomebodyOrMe = Me
+    Else
+        Set SomebodyOrMe = oWho
+    End If
+End Function
+
+
+'=== main procedures helper end ===
+'=== event procedures begin ===
+
+
+Private Sub Class_Initialize()
+    Set MyApp = Application
+    MyName = CStr(Timer)    ' random name, maybe uniq
+End Sub
+
+Private Sub Class_Terminate()
+    Set MyApp = Nothing
+End Sub
+
+
+'=== event procedures end ===
+'=== construction and destruction begin ===
+
+
+Public Sub NewBar(ParamArray Addins() As Variant)
+    DelBar
+    Set MyBar = CreateBar(MyApp, MyName)
+    AddAddins MyBar, CVar(Addins)
+    ShowBar MyBar
+End Sub
+
+Public Sub DelBar()
+    DeleteBar MyBar
+    Set MyBar = Nothing
+End Sub
+
+Public Sub SetApplication(oApp As Application)
+    Set MyApp = oApp
+End Sub
+
+Public Sub SetName(NewName As String)
+    MyName = NewName
+End Sub
+
+Public Property Get Bar() As Office.CommandBar
+    Set Bar = MyBar
+End Property
+
+
+'=== construction and destruction end ===
+'=== bar generator begin ===
+
+
+Public Function CreateBar(oApp As Application, BarName As String) As Office.CommandBar
+    RemoveExistingBar oApp, BarName
+    Set CreateBar = oApp.CommandBars.Add(Name:=BarName, Temporary:=True)
+End Function
+
+Public Sub RemoveExistingBar(oApp As Application, BarName As String)
+    On Error Resume Next
+    oApp.CommandBars(BarName).Delete
+End Sub
+
+Public Sub DeleteBar(Bar As Object)
+    On Error Resume Next
+    Bar.Delete
+End Sub
+
+Public Sub ShowBar(Bar As Object, Optional Position As Long = msoBarTop, Optional Height As Long = 0)
+    Bar.Visible = True
+    Bar.Position = Position
+    If Height > 0 Then Bar.Height = Bar.Height * Height
+End Sub
+
+
+'=== bar generator end ===
+'=== handle addins begin ===
+
+
+Public Function WithAddins(ParamArray Addins() As Variant) As Long
+    WithAddins = AddAddins(MyBar, CVar(Addins))
+End Function
+
+Public Function AddAddins(Bar As Object, Addins As Variant) As Long
+    Dim Addin As Variant
+    Dim LastButtonIndex As Long
+    
+    For Each Addin In Addins
+        LastButtonIndex = AddButtons(Bar, Addin.ButtonData, Addin.ButtonParent)
+    Next
+    
+    AddAddins = LastButtonIndex
+End Function
+
+
+'=== handle addins end ===
+'=== button generator begin ===
+
+
+Public Function AddButtons(Bar As Object, Data As Variant, Parent As Variant) As Long
+    Dim LastButtonIndex As Long
+    Dim SingleData As Variant
+    
+    For Each SingleData In Data
+        LastButtonIndex = Add(Bar, MakeAButtonData(SingleData, Parent))
+    Next
+    
+    AddButtons = LastButtonIndex
+End Function
+
+Public Function Add(Bar As Object, Data As Variant) As Long
+    Dim ButtonA As CommandBarControl
+    
+    Set ButtonA = Bar.Controls.Add(Type:=ButtonControlType(Data), Temporary:=True)
+    With ButtonA
+        Select Case ButtonControlType(Data)
+        Case msoControlEdit                         '2      ' textbox
+        Case msoControlDropdown, msoControlComboBox '3, 4   ' list and combo
+            SetButtonItems ButtonA, Data
+            SetButtonStyle ButtonA, Data
+        Case msoControlPopup                        '10     ' popup
+            SetButtonPopup ButtonA, Data
+        Case msoControlButton                       '1      ' Button
+            SetButtonStyle ButtonA, Data
+            SetButtonState ButtonA, Data
+        End Select
+        SetButtonWidth ButtonA, Data
+        SetButtonGroup ButtonA, Data
+        .OnAction = ButtonAction(Data)
+        .Caption = ButtonCaption(Data)
+        .TooltipText = ButtonDescription(Data)
+        .Tag = ButtonTag(Data)
+        .Parameter = ButtonParameter(Data)
+    End With
+    
+    Add = ButtonA.Index
+    Set ButtonA = Nothing
+End Function
+
+Public Sub Remove(Bar As Object, Items As Variant)
+    On Error Resume Next
+    Dim Item As Variant
+    
+    If IsArray(Item) Then
+        For Each Item In Items
+            Remove Bar, Item
+        Next
+    Else
+        Bar.Controls(Item).Delete
+    End If
+End Sub
+
+
+'=== button generator end ===
+'=== button data structure begin ===
+
+
+' generator / selector
+
+' Data(): Array of button data
+' Parent(): Array of button parent information (bar and properties)
+'           Parent(0) is reserved for addin key
+
+
+Public Function MakeAButtonData(Data As Variant, Parent As Variant) As Variant
+    MakeAButtonData = Array(NormalizeArray(Data), Parent)
+End Function
+
+Public Function DataAButtonData(AButtonData As Variant) As Variant
+    On Error Resume Next
+    DataAButtonData = AButtonData(0)
+End Function
+
+Public Function ParentAButtonData(AButtonData As Variant) As Variant
+    On Error Resume Next
+    ParentAButtonData = AButtonData(1)
+End Function
+
+Public Function KeyAButtonData(AButtonData As Variant) As String
+    On Error Resume Next
+    KeyAButtonData = ParentAButtonData(AButtonData)(0)
+End Function
+
+Public Function ItemAButtonData(AButtonData As Variant, ByVal Item As Long, _
+            Optional FallBack As Variant = Empty) As Variant
+    On Error Resume Next
+    Dim out As Variant
+    
+    out = DataAButtonData(AButtonData)(Item)
+    If IsEmpty(out) Then out = FallBack
+    
+    ItemAButtonData = out
+End Function
+
+
+'=== button data structure end ===
+'=== button data struncture detail begin ===
+
+
+Public Function ButtonCaption(Data As Variant) As String
+    ButtonCaption = ItemAButtonData(Data, 0)
+End Function
+
+Public Function ButtonDescription(Data As Variant) As String
+    ButtonDescription = ItemAButtonData(Data, 1)
+End Function
+
+Public Function ButtonTag(Data As Variant) As String
+    ButtonTag = ItemAButtonData(Data, 2, ButtonCaption(Data))
+End Function
+
+Public Function ButtonParameter(Data As Variant) As String
+    ButtonParameter = ItemAButtonData(Data, 3)
+End Function
+
+Public Function ButtonControlType(Data As Variant) As Long
+    'MsoControlType
+    On Error Resume Next
+    ButtonControlType = Val(ItemAButtonData(Data, 4, msoControlButton))
+End Function
+
+Public Function ButtonStyle(Data As Variant) As Long
+    'MsoButtonStyle
+    On Error Resume Next
+    ButtonStyle = Val(ItemAButtonData(Data, 5, msoButtonCaption))
+End Function
+
+Public Function ButtonWidth(Data As Variant) As Long
+    ' we use 45 units here
+    On Error Resume Next
+    Const UnitWidth = 45
+    ButtonWidth = Val(ItemAButtonData(Data, 6)) * UnitWidth
+End Function
+
+Public Function ButtonGroup(Data As Variant) As Boolean
+    ' put group line on its left
+    ButtonGroup = Not IsEmpty(ItemAButtonData(Data, 7))
+End Function
+
+Public Function ButtonAction(Data As Variant) As String
+    On Error Resume Next
+    ' Standard Method Name to be kicked with the button
+    Const BarMain = "BarMain"
+    Dim FullName As String
+    
+    If KeyAButtonData(Data) = "" Then
+        FullName = BarMain
+    Else
+        FullName = KeyAButtonData(Data) & "." & BarMain
+    End If
+    
+    ButtonAction = ItemAButtonData(Data, 8, FullName)
+End Function
+
+Public Function ButtonItems(Data As Variant) As Variant
+    Dim pan As Variant
+    Dim i As Long
+    
+    On Error GoTo DONE
+    pan = Empty
+    i = 9
+    
+    Do Until IsEmpty(ItemAButtonData(Data, i))
+        pan = Array(ItemAButtonData(Data, i), pan)
+        i = i + 1
+    Loop
+    
+DONE:
+    ButtonItems = pan
+End Function
+
+
+'=== button data struncture detail end ===
+'=== button tools for data begin ===
+
+
+Public Sub SetButtonWidth(ButtonA As CommandBarControl, Data As Variant)
+    If ButtonWidth(Data) > 0 Then ButtonA.Width = ButtonWidth(Data)
+End Sub
+
+Public Sub SetButtonStyle(ButtonA As Object, Data As Variant)
+    On Error Resume Next
+    ' Each Button does not accept each style, but we won't check them.
+    If ButtonStyle(Data) <> 0 Then ButtonA.Style = ButtonStyle(Data)
+End Sub
+
+Public Sub SetButtonGroup(ButtonA As CommandBarControl, Data As Variant)
+    If ButtonGroup(Data) Then ButtonA.BeginGroup = True
+End Sub
+
+Public Sub SetButtonItems(ButtonA As Object, Data As Variant)
+    Dim pan As Variant
+    Dim HasItem As Boolean
+    
+    pan = ButtonItems(Data)
+    HasItem = False
+    
+    Do Until IsEmpty(pan)
+        ButtonA.AddItem pan(0), 1
+        pan = pan(1)
+        HasItem = True
+    Loop
+    If HasItem Then ButtonA.ListIndex = 1
+End Sub
+
+Public Sub SetButtonPopup(ButtonA As CommandBarControl, Data As Variant)
+    Dim MyChild As Variant
+    
+    MyChild = StackToArray(ButtonItems(Data))
+    If UBound(MyChild) >= 0 Then Add ButtonA, MyChild
+End Sub
+
+Public Sub SetButtonState(ButtonA As Object, Data As Variant)
+    If Not IsEmpty(ButtonItems(Data)) Then ButtonA.State = msoButtonDown
+End Sub
+
+
+'=== button tools for data end ===
+'=== button tools for control object begin ===
+
+
+Public Sub ComboAddHistory(oAC As Object, Optional AtBottom As Boolean = False)
+    If oAC.ListIndex > 0 Then Exit Sub
+    
+    If AtBottom Then
+        oAC.AddItem oAC.Text
+        oAC.ListIndex = oAC.ListCount
+    Else
+        oAC.AddItem oAC.Text, 1
+        oAC.ListIndex = 1
+    End If
+End Sub
+
+Public Sub ListAddHistory(oAC As Object, Text As String, Optional AtBottom As Boolean = False)
+    If AtBottom Then
+        oAC.AddItem Text
+        oAC.ListIndex = oAC.ListCount
+    Else
+        oAC.AddItem Text, 1
+        oAC.ListIndex = 1
+    End If
+End Sub
+
+Public Function ListFindIndex(oAC As Object, Text As String) As Long
+    Dim i As Long
+    For i = 1 To oAC.ListCount
+        If oAC.List(i) = Text Then
+            ListFindIndex = i
+            Exit Function
+        End If
+    Next
+    ListFindIndex = 0
+End Function
+
+Public Function ControlText(oAC As Object) As String
+    ControlText = oAC.Text
+End Function
+
+Public Sub ButtonSwitchOn(oAC As Object)
+    oAC.State = msoButtonDown
+End Sub
+
+Public Sub ButtonSwitchOff(oAC As Object)
+    oAC.State = msoButtonUp
+End Sub
+
+Public Function ButtonSwitchToggle(oAC As Object) As Boolean
+    ButtonSwitchToggle = (Not IsButtonStateOn(oAC))
+    If ButtonSwitchToggle Then
+        ButtonSwitchOn oAC
+    Else
+        ButtonSwitchOff oAC
+    End If
+End Function
+
+Public Function IsButtonStateOn(oAC As Object) As Boolean
+    IsButtonStateOn = (oAC.State = msoButtonDown)
+End Function
+
+Public Function ButtonFindByTag(oAC As Object, Tag As Variant) As CommandBarControl
+    If oAC Is Nothing Then Exit Function
+    If TypeName(oAC) = "CommandBar" Then
+        Set ButtonFindByTag = oAC.FindControl(Tag:=Tag)
+    Else
+        Set ButtonFindByTag = oAC.Parent.FindControl(Tag:=Tag)
+    End If
+End Function
+
+
+'=== button tools for control object end ===
+'=== button tools for mybar begin ===
+
+
+Public Function GetButton(TagOrIndex As Variant) As Office.CommandBarControl
+    On Error Resume Next
+    Select Case TypeName(TagOrIndex)
+    Case "Long", "Integer", "Byte", "Double", "Single"
+        Set GetButton = MyBar.Controls(TagOrIndex)
+    Case Else
+        Set GetButton = ButtonFindByTag(MyBar, TagOrIndex)
+    End Select
+End Function
+
+Public Function GetControlText(TagOrIndex As Variant) As String
+    Dim out As String
+    Dim oAC As Office.CommandBarControl
+    
+    Set oAC = GetButton(TagOrIndex)
+    If oAC Is Nothing Then Exit Function
+    
+    Select Case oAC.Type
+    Case msoControlEdit, msoControlDropdown, msoControlComboBox
+        out = oAC.Text
+    Case Else   ' msoControlButton, msoControlPopup
+        out = oAC.Caption
+    End Select
+    
+    Set oAC = Nothing
+    GetControlText = out
+End Function
+
+Public Function SetControlText(TagOrIndex As Variant, ByVal Text As String) As Boolean
+    Dim out As Boolean
+    Dim oAC As Office.CommandBarControl
+    Dim Index As Long
+    
+    Set oAC = GetButton(TagOrIndex)
+    If oAC Is Nothing Then
+        out = False
+    Else
+        Select Case oAC.Type
+        Case msoControlEdit
+            oAC.Text = Text
+        Case msoControlDropdown
+            Index = ListFindIndex(oAC, Text)
+            If Index = 0 Then
+                ListAddHistory oAC, Text
+            Else
+                oAC.ListIndex = Index
+            End If
+        Case msoControlComboBox
+            Index = ListFindIndex(oAC, Text)
+            If Index = 0 Then
+                oAC.Text = Text
+                ComboAddHistory oAC
+            Else
+                oAC.ListIndex = Index
+            End If
+        Case Else
+            oAC.Caption = Text
+        End Select
+        Set oAC = Nothing
+        out = True
+    End If
+    
+    SetControlText = out
+End Function
+
+Public Function GetControlState(TagOrIndex As Variant) As Boolean
+    Dim out As Boolean
+    Dim oAC As Office.CommandBarControl
+    
+    Set oAC = GetButton(TagOrIndex)
+    If oAC Is Nothing Then Exit Function
+    
+    out = False
+    If oAC.Type = msoControlButton Then
+        ' return True when the button is pushed down
+        out = IsButtonStateOn(oAC)
+    End If
+    
+    Set oAC = Nothing
+    GetControlState = out
+End Function
+
+Public Function SetControlState(TagOrIndex As Variant, ByVal State As Boolean) As Boolean
+    Dim out As Boolean
+    Dim oAC As Office.CommandBarControl
+    
+    Set oAC = GetButton(TagOrIndex)
+    If oAC Is Nothing Then Exit Function
+    
+    out = False
+    If oAC.Type = msoControlButton Then
+        If IsButtonStateOn(oAC) <> State Then
+            If State Then
+                ButtonSwitchOn oAC
+            Else
+                ButtonSwitchOff oAC
+            End If
+            ' return True when the status is strictly changed
+            out = True
+        End If
+    End If
+    
+    Set oAC = Nothing
+    SetControlState = out
+End Function
+
+Public Function GetControlVisible(TagOrIndex As Variant) As Boolean
+    Dim oAC As Office.CommandBarControl
+    
+    Set oAC = GetButton(TagOrIndex)
+    If oAC Is Nothing Then Exit Function
+    
+    GetControlVisible = oAC.Visible
+End Function
+
+Public Function SetControlVisible(TagOrIndex As Variant, ByVal Visible As Boolean) As Boolean
+    Dim out As Boolean
+    Dim oAC As Office.CommandBarControl
+    
+    Set oAC = GetButton(TagOrIndex)
+    If oAC Is Nothing Then Exit Function
+    
+    out = False
+    If oAC.Visible <> Visible Then
+        oAC.Visible = Visible
+        ' return True when the visible is strictly changed
+        out = True
+    End If
+    
+    SetControlVisible = out
+End Function
+
+Public Function IncControlWidth(TagOrIndex As Variant, ByVal Width As Long) As Long
+    Dim out As Long
+    Dim oAC As Office.CommandBarControl
+    
+    Set oAC = GetButton(TagOrIndex)
+    If oAC Is Nothing Then Exit Function
+    
+    On Error Resume Next
+    oAC.Width = oAC.Width + Width
+    ' return the width accepted (tips: setting 0 to width makes it becomes default)
+    out = oAC.Width
+    
+    IncControlWidth = out
+End Function
+
+
+'=== button tools for mybar end ===
+'=== helper functions begin ===
+
+
+Public Function NormalizeArray(x As Variant) As Variant
+    On Error Resume Next
+    Dim out() As Variant
+    Dim i As Long
+    Dim L1 As Long
+    Dim L2 As Long
+    Dim U1 As Long
+    Dim U2 As Long
+    
+    L1 = 0
+    L2 = 0
+    U1 = -1
+    U2 = -1
+    
+    L1 = LBound(x)
+    L2 = LBound(x, 2)   ' error unless 2 dimensions
+    U1 = UBound(x)
+    U2 = UBound(x, 2)   ' error unless 2 dimensions
+    
+    If U1 < L1 Then
+        NormalizeArray = Array()
+        Exit Function
+    End If
+    
+    If U2 = -1 Then
+        ReDim out(0 To U1 - L1)
+        For i = 0 To UBound(out)
+            out(i) = x(i + L1)
+        Next
+    Else
+        ReDim out(0 To U2 - L2)
+        For i = 0 To UBound(out)
+            out(i) = x(L1, i + L2)
+            ' we pick up the 1st line only
+        Next
+    End If
+    
+    NormalizeArray = out
+End Function
+
+Public Function StackToArray(pan As Variant) As Variant
+    Dim out() As Variant
+    Dim x As Variant
+    Dim i As Long
+    Dim Counter As Long
+    
+    x = Empty
+    Counter = 0
+    Do Until IsEmpty(pan)
+        x = Array(pan(0), x)
+        pan = pan(1)
+        Counter = Counter + 1
+    Loop
+    
+    If Counter = 0 Then
+        StackToArray = Array()
+        Exit Function
+    End If
+    
+    ReDim out(0 To Counter - 1)
+    i = 0
+    Do Until IsEmpty(x)
+        out(i) = x(0)
+        x = x(1)
+        i = i + 1
+    Loop
+    
+    StackToArray = out
+End Function
+
+
+'=== helper functions end ===
+
+'}}}
+
+'class
+'   name;BrowserHelper
+'{{{
+' Called by Menu_google, etc. on BaumMain
+
+Private Browser As InternetExplorer
+
+Public Sub Google(Ra As Range, Opts As Variant)
+    Const URL = "http://www.google.co.jp/#hl=ja&q="
+    Dim ReqUrl As String
+    Dim ReqData As String
+    
+    ReqData = TransOptsText(Ra.Text, Opts)
+    
+    ReqUrl = URL & HelloUrlencode.EncUrlString(ReqData)
+    Browser.Navigate ReqUrl
+    DoNotepad.ShowNotepad Browser.hWnd
+End Sub
+
+Public Sub GoogleScholar(Ra As Range, Opts As Variant)
+    Const URL = "http://scholar.google.co.jp/scholar?hl=ja&q="
+    Dim ReqUrl As String
+    Dim ReqData As String
+    
+    ReqData = TransOptsText(Ra.Text, Opts)
+    
+    ReqUrl = URL & HelloUrlencode.EncUrlString(ReqData)
+    Browser.Navigate ReqUrl
+    DoNotepad.ShowNotepad Browser.hWnd
+End Sub
+
+Public Sub GoogleBook(Ra As Range, Opts As Variant)
+    Const URL = "http://www.google.co.jp/#tbm=bks&hl=ja&q="
+    Dim ReqUrl As String
+    Dim ReqData As String
+    
+    ReqData = TransOptsText(Ra.Text, Opts)
+    
+    ReqUrl = URL & HelloUrlencode.EncUrlString(ReqData)
+    Browser.Navigate ReqUrl
+    DoNotepad.ShowNotepad Browser.hWnd
+End Sub
+
+Public Sub Amazon(Ra As Range, Opts As Variant)
+    Const URL = "http://www.amazon.co.jp/s/ref=nb_sb_noss_2?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&url=search-alias%3Daps&field-keywords="
+    Dim ReqUrl As String
+    Dim ReqData As String
+    
+    ReqData = TransOptsText(Ra.Text, Opts)
+    
+    ReqUrl = URL & HelloUrlencode.EncUrlString(ReqData)
+    Browser.Navigate ReqUrl
+    DoNotepad.ShowNotepad Browser.hWnd
+End Sub
+
+Public Sub CambridgePlus(Ra As Range, Opts As Variant)
+    Const URL = "http://cam.summon.serialssolutions.com/search?s.fvf%5B%5D=&s.q="
+    Dim ReqUrl As String
+    Dim ReqData As String
+    
+    ReqData = TransOptsText(Ra.Text, Opts)
+    
+    ReqUrl = URL & HelloUrlencode.EncUrlString(ReqData)
+    Browser.Navigate ReqUrl
+    DoNotepad.ShowNotepad Browser.hWnd
+End Sub
+
+' Translate the text by user options ( length )
+Private Function TransOptsText(Text As String, Opts As Variant) As String
+    Dim Res As String
+    Res = Text
+    
+    If (Opts(0) > 0) Then Res = Left(Res, Opts(0))
+    
+    TransOptsText = Res
+End Function
+
+' Browser object
+Public Sub RestartBrowser()
+    Class_Terminate
+    Class_Initialize
+End Sub
+
+Private Sub Class_Initialize()
+    Set Browser = New InternetExplorer
+    Browser.Visible = True
+End Sub
+
+Private Sub Class_Terminate()
+    On Error Resume Next
+    Browser.Quit
+    Set Browser = Nothing
+End Sub
+
+'}}}
+
+'module
+'   name;UtilText
+'{{{
+Option Explicit
+
+Const DefaultLineFeed = vbCrLf
+Const DefaultDelimiter = " "
+
+' 検索、切り取り
+
+Public Function DivideAtFirstMatch( _
+    ByRef MatchedTag As String, ByRef BeforeTag As String, ByRef AfterTag As String, _
+    Text As String, Tags As Variant, Optional Compare As VbCompareMethod = vbBinaryCompare) As Boolean
+    ' 配列でもらった Tag のいずれかの、最初の位置に見つかったもので、文字列を前後に分けて返す。
+    ' MatchedTag: 実際に見つかったタグ、見つからないときは "" を返す。
+    ' BeforeTag:  Text の Tag より前の部分 を返す。
+    ' AfterTag:   Text の Tag より後の部分 を返す。
+    ' Text:       検索対象の文字列を指定する。
+    ' Tags:       検索するタグを指定する。 Array("<b>","<i>") など
+    ' 戻り値:     タグが１つも無ければ false
+    ' 同一順位なら、先に指定されたタグを優先する。 ("<b","<br" のようにどちらにも一致する場合)
+    
+    Dim Tag As Variant
+    Dim At As Long
+    Dim AtFirst As Long
+    Dim AtTag As String
+    
+    If Not IsArray(Tags) Then
+        DivideAtFirstMatch = DivideAtFirstMatch(MatchedTag, BeforeTag, AfterTag, Text, Array(CStr(Tags)))
+        Exit Function
+    End If
+    
+    AtFirst = Len(Text) + 1
+    AtTag = ""
+    For Each Tag In Tags
+        If Tag = "" Then GoTo Ignore
+        At = InStr(1, Text, CStr(Tag), Compare)
+        If At = 0 Then GoTo Ignore
+        If At >= AtFirst Then GoTo Ignore
+        
+        AtFirst = At
+        AtTag = CStr(Tag)
+Ignore:
+    Next
+    
+    MatchedTag = AtTag
+    BeforeTag = Left(Text, AtFirst - 1)
+    AfterTag = Right(Text, Len(Text) - AtFirst + 1 - Len(AtTag))
+    DivideAtFirstMatch = (AtTag <> "")
+End Function
+
+' 検索語の直後から切り取る
+
+Public Function LaserKnife(Text As Variant, SearchMe As Variant, Optional ByVal Length As Long = -1) As String
+    Dim out As String
+    Dim SearchText As String
+    Dim FoundAt As Long
+    
+    SearchText = CStr(SearchMe)
+    Select Case TypeName(Text)
+    Case "String"
+        If Length = -1 Then Length = Len(Text)
+        FoundAt = InStr(1, Text, SearchText, vbTextCompare)
+        If FoundAt = 0 Then
+            out = Left(Text, Length)
+        Else
+            out = Mid(Text, FoundAt + Len(SearchText), Length)
+        End If
+    Case Else
+        out = TypeName(Text)
+    End Select
+    
+    LaserKnife = out
+End Function
+
+
+' ユニコード文字とバイト配列間の変換
+
+Public Function BytesToString(Data As Variant, Optional ByVal Length As Long = -1) As String
+    Dim out As String
+    Dim i As Long
+    
+    out = ""
+    If Length = -1 Then Length = UBound(Data) + 1
+    For i = 0 To Length - 1
+        out = out & ChrB(Data(i))
+    Next
+    
+    BytesToString = out
+End Function
+
+Public Function StringToBytes(Text As String) As Byte()
+    Dim out() As Byte
+    Dim i As Long
+    Dim Length As Long
+    
+    Length = LenB(Text)
+    ReDim out(0 To Length - 1)
+    For i = 1 To Length
+        out(i - 1) = AscB(MidB(Text, i, 1))
+    Next
+    
+    StringToBytes = out
+End Function
+
+' ユニコード文字とワード配列間の変換
+
+Public Function WordsToString(Data As Variant, Optional ByVal Length As Long = -1) As String
+    Dim out As String
+    Dim i As Long
+    
+    out = ""
+    If Length = -1 Then Length = UBound(Data) + 1
+    For i = 0 To Length - 1
+        out = out & ChrW(Data(i))
+    Next
+    
+    WordsToString = out
+End Function
+
+Public Function StringToWords(Text As String) As Integer()
+    Dim out() As Integer
+    Dim i As Long
+    Dim Length As Long
+    
+    Length = Len(Text)
+    ReDim out(0 To Length - 1)
+    For i = 1 To Length
+        out(i - 1) = AscW(Mid(Text, i, 1))
+    Next
+    
+    StringToWords = out
+End Function
+
+' ユニコード文字とロング配列間の変換
+
+Public Function LongsToString(Data As Variant, Optional ByVal Length As Long = -1) As String
+    Dim out As String
+    Dim i As Long
+    
+    out = ""
+    If Length = -1 Then Length = UBound(Data) + 1
+    For i = 0 To Length - 1
+        out = out & Chr(Data(i))
+    Next
+    
+    LongsToString = out
+End Function
+
+Public Function StringToLongs(Text As String) As Long()
+    Dim out() As Long
+    Dim i As Long
+    Dim Length As Long
+    
+    Length = Len(Text)
+    ReDim out(0 To Length - 1)
+    For i = 1 To Length
+        out(i - 1) = Asc(Mid(Text, i, 1))
+    Next
+    
+    StringToLongs = out
+End Function
+
+' ワードまとめと分離
+
+Public Function BytesToWords(Data As Variant, Optional ByVal Length As Long = -1) As Integer()
+    Dim WordLength As Long
+    Dim i As Long
+    Dim out() As Integer
+    
+    If Length = -1 Then Length = UBound(Data) + 1
+    WordLength = Int(Length / 2) + Length Mod 2
+    ' this will lose an information of the original length, odd
+    If WordLength > 0 Then
+        ReDim out(0 To WordLength - 1)
+        For i = 0 To Length - 1 Step 2
+            out(i / 2) = Data(i)
+        Next
+        For i = 1 To Length - 1 Step 2
+            If Data(i) < &H80 Then
+                out((i - 1) / 2) = out((i - 1) / 2) + Data(i) * CLng(&H100)
+            Else    ' minus bit
+                out((i - 1) / 2) = out((i - 1) / 2) + (Data(i) - &H100) * CLng(&H100)
+            End If
+        Next
+    End If
+    
+    BytesToWords = out
+End Function
+
+Public Function WordsToBytes(Data As Variant, Optional ByVal Length As Long = -1) As Byte()
+    Dim ByteLength As Long
+    Dim i As Long
+    Dim out() As Byte
+    
+    If Length = -1 Then Length = UBound(Data) + 1
+    ByteLength = Length * 2
+    If ByteLength > 0 Then
+        ReDim out(0 To ByteLength - 1)
+        For i = 0 To Length - 1
+            out(i * 2) = CByte(Data(i) And &HFF)
+            If Data(i) >= 0 Then
+                out(i * 2 + 1) = CByte(Int(Data(i) / &H100))
+            Else
+                out(i * 2 + 1) = CByte(Int(Data(i) / &H100) + &H100)
+            End If
+        Next
+    End If
+    
+    WordsToBytes = out
+End Function
+
+' バイト配列と16進ダンプ間の変換
+
+Public Function EncHexDelimited(Data As Variant, Optional ByVal Length As Long = -1) As String
+    Dim out As String
+    Dim i As Long
+    
+    out = ""
+    If Length = -1 Then Length = UBound(Data) + 1
+    For i = 0 To Length - 1
+        out = out & Hex(Data(i)) & DefaultDelimiter
+    Next
+    
+    EncHexDelimited = out
+End Function
+
+Public Function EncHexDelimitedB(Data As Variant, Optional ByVal Length As Long = -1, Optional ByVal Width As Long = 2) As String
+    Dim out As String
+    Dim i As Long
+    Dim s As String
+    
+    out = ""
+    If Length = -1 Then Length = UBound(Data) + 1
+    s = String(Width, "0")
+    For i = 0 To Length - 1
+        out = out & Right(s & Hex(Data(i)), Width) & DefaultDelimiter
+    Next
+    
+    EncHexDelimitedB = out
+End Function
+
+Public Function DecHexDelimited(Text As String) As Byte()
+    Dim Line As Variant
+    Dim ByteData As Variant
+    Dim out() As Byte
+    Dim pan As Variant
+    Dim Counter As Long
+    Dim i As Long
+    
+    pan = Empty
+    Counter = 0
+    
+    For Each Line In Split(Text, DefaultLineFeed)
+        For Each ByteData In Split(Line, DefaultDelimiter)
+            If ByteData <> "" Then
+                pan = Array(CByte("&H" & ByteData), pan)
+                Counter = Counter + 1
+            End If
+        Next
+    Next
+    
+    If Counter > 0 Then
+        ReDim out(0 To Counter - 1)
+        For i = Counter - 1 To 0 Step -1
+            out(i) = pan(0)
+            pan = pan(1)
+        Next
+    End If
+    
+    DecHexDelimited = out
+End Function
+
+Public Function DecHexDelimitedL(Text As String) As Long()
+    Dim Line As Variant
+    Dim LongData As Variant
+    Dim out() As Long
+    Dim pan As Variant
+    Dim Counter As Long
+    Dim i As Long
+    
+    pan = Empty
+    Counter = 0
+    
+    For Each Line In Split(Text, DefaultLineFeed)
+        For Each LongData In Split(Line, DefaultDelimiter)
+            If LongData <> "" Then
+                pan = Array(CLng("&H" & LongData), pan)
+                Counter = Counter + 1
+            End If
+        Next
+    Next
+    
+    If Counter > 0 Then
+        ReDim out(0 To Counter - 1)
+        For i = Counter - 1 To 0 Step -1
+            out(i) = pan(0)
+            pan = pan(1)
+        Next
+    End If
+    
+    DecHexDelimitedL = out
+End Function
+
+' 改行統一 (vbCrLF, vbLF, vbCr を指定のものに統一する)
+
+Public Function FixLineFeed(Text As String, Optional NewLineFeed As String = vbCrLf) As String
+    Dim pan As Collection
+    Dim out As String
+    Dim Line As Variant
+    Dim MoreLine As Variant
+    Dim MoreEnd As Long
+    Dim i As Long
+    
+    Set pan = New Collection
+    For Each Line In Split(Text, vbLf)
+        If Line = "" Then
+            pan.Add ""
+        Else
+            MoreLine = Split(Line, vbCr)
+            MoreEnd = UBound(MoreLine)
+            If MoreLine(MoreEnd) = "" Then MoreEnd = MoreEnd - 1
+            For i = 0 To MoreEnd
+                pan.Add MoreLine(i)
+            Next
+        End If
+    Next
+    Do While pan.Count > 0
+        out = out & pan(1) & NewLineFeed
+        pan.Remove 1
+    Loop
+    
+    If out = "" Then
+        FixLineFeed = ""
+    Else
+        FixLineFeed = Left(out, Len(out) - Len(NewLineFeed))
+    End If
+End Function
+
+' 整数配列とビット列ダンプ間の変換
+
+Public Function EncBits(Data As Variant, Optional ByVal Length As Long = -1, _
+                Optional ByVal LowbitFirst As Boolean = True, _
+                Optional ByVal FixedBitLength As Long = -1, _
+                Optional Delimiter As String = " ") As String
+    Dim out As String
+    Dim i As Long
+    Dim j As Long
+    Dim x As Long
+    Dim BitLength As Long
+    Dim Bits() As Long
+    
+    out = ""
+    If Length = -1 Then Length = UBound(Data) + 1
+    
+    If FixedBitLength = -1 Then
+        ReDim Bits(0 To 31)
+    Else
+        BitLength = FixedBitLength
+        ReDim Bits(0 To FixedBitLength - 1)
+    End If
+    
+    For i = 0 To Length - 1
+        If FixedBitLength = -1 Then
+            Select Case TypeName(Data(i))
+            Case "Byte"
+                BitLength = 8
+            Case "Integer"
+                BitLength = 16
+            Case "Long"
+                BitLength = 32
+            Case Else
+                BitLength = 0
+            End Select
+        End If
+        
+        x = Data(i)
+        For j = 0 To BitLength - 1
+            Bits(j) = Abs(x Mod 2)
+            x = Int(x / 2)
+        Next
+        
+        If LowbitFirst Then
+            For j = 0 To BitLength - 1
+                out = out & CStr(Bits(j))
+            Next
+        Else
+            For j = BitLength - 1 To 0 Step -1
+                out = out & CStr(Bits(j))
+            Next
+        End If
+        out = out & Delimiter
+    Next
+    
+    EncBits = out
+End Function
+
+Public Function DecBits(Text As String, Optional ByVal LowbitFirst As Boolean = True) As Variant
+    Dim out() As Variant
+    Dim DataValue As Variant
+    Dim Bitter As Long
+    Dim pan As Variant
+    Dim Counter As Long
+    Dim i As Long
+    Dim TextAddEnd As String
+    
+    pan = Empty
+    Counter = 0
+    Bitter = 0
+    DataValue = 0
+    TextAddEnd = Text & " "
+    
+    For i = 1 To Len(TextAddEnd)
+        Select Case Mid(TextAddEnd, i, 1)
+        Case "0"
+            If Not LowbitFirst Then
+                DataValue = DataValue * 2
+            End If
+            Bitter = Bitter + 1
+        Case "1"
+            If LowbitFirst Then
+                DataValue = DataValue + 2 ^ Bitter
+            Else
+                DataValue = DataValue * 2 + 1
+            End If
+            Bitter = Bitter + 1
+        Case Else
+            If Bitter > 1 Then
+                If Bitter <= 8 Then
+                    DataValue = CByte(DataValue)
+                ElseIf Bitter <= 15 Then
+                    DataValue = CInt(DataValue)
+                ElseIf Bitter = 16 Then
+                    If DataValue >= 32768 Then
+                        DataValue = CInt(DataValue - 65536)
+                    Else
+                        DataValue = CInt(DataValue)
+                    End If
+                ElseIf Bitter <= 31 Then
+                    DataValue = CLng(DataValue)
+                ElseIf Bitter = 32 Then
+                    If DataValue >= 2147483648# Then
+                        DataValue = CLng(DataValue - 4294967296#)
+                    Else
+                        DataValue = CLng(DataValue)
+                    End If
+                End If
+                pan = Array(DataValue, pan)
+                Counter = Counter + 1
+                Bitter = 0
+                DataValue = 0
+            End If
+        End Select
+    Next
+    
+    
+    If Counter > 0 Then
+        ReDim out(0 To Counter - 1)
+        For i = Counter - 1 To 0 Step -1
+            out(i) = pan(0)
+            pan = pan(1)
+        Next
+    End If
+    
+    DecBits = out
+End Function
+
+
+' バリアント配列のテキスト変換
+' Array(1, Array(2, 3), 4, 5) を次のように記す
+' (1,(2,3,)4,5,)
+
+Private Function DefineParenthes() As Variant
+    DefineParenthes = Array("(", ")", ",")
+End Function
+
+Public Function EncVariantArray(Data As Variant) As String
+    Dim Parenthes As Variant
+    Dim KeyValue As Variant
+    Dim out As String
+    Dim Delimiter As String
+    Dim ArrayBegin As String
+    Dim ArrayEnd As String
+    
+    Parenthes = DefineParenthes
+    ArrayBegin = Parenthes(0)
+    ArrayEnd = Parenthes(1)
+    Delimiter = Parenthes(2)
+    
+    If IsArray(Data) Then
+        out = ArrayBegin
+        For Each KeyValue In Data
+            out = out & EncVariantArray(KeyValue) & Delimiter
+        Next
+        out = out & ArrayEnd
+    ElseIf IsObject(Data) Then
+        out = TypeName(Data)
+    Else
+        out = CStr(Data)
+    End If
+    
+    EncVariantArray = out
+End Function
+
+Public Function DecVariantArray(ByVal Text As String) As Variant
+    Dim Evaluated As Variant
+    EvalAfter Evaluated, Text
+    DecVariantArray = Evaluated(0)
+End Function
+
+Private Function EvalComma(ByRef MatchedTag As String, ByRef BeforeTag As String, ByRef Text As String) As Long
+    Dim i As Long
+    Dim AfterTag As String
+    Dim Tags As Variant
+    
+    Tags = DefineParenthes
+    EvalComma = -1
+    If DivideAtFirstMatch(MatchedTag, BeforeTag, AfterTag, Text, Tags) Then
+        For i = 0 To UBound(Tags)
+            If MatchedTag = Tags(i) Then
+                EvalComma = i
+                Exit For
+            End If
+        Next
+    End If
+    
+    Text = AfterTag
+End Function
+
+Private Function EvalBefore(ByRef Evaluated As Variant, Text As String) As Boolean
+    If IsNumeric(Text) Then
+        Evaluated = Array(Val(Text), Evaluated)
+    Else
+        Evaluated = Array(Text, Evaluated)
+    End If
+    EvalBefore = True
+End Function
+
+Private Function EvalAfter(ByRef Evaluated As Variant, ByRef Text As String) As Boolean
+    Dim MatchedTag As String
+    Dim BeforeTag As String
+    Dim MyEvaluated As Variant
+    Dim Divider As String
+    Dim Counter As Long
+    Dim i As Long
+    Dim out() As Variant
+    
+    Divider = DefineParenthes(2)
+    Counter = 0
+    
+    Do Until Text = ""
+        Select Case EvalComma(MatchedTag, BeforeTag, Text)
+        Case 0  'new child
+            ' ignore BeforeTag
+            MyEvaluated = Empty
+            If EvalAfter(MyEvaluated, Text) Then Evaluated = Array(MyEvaluated, Evaluated)
+            Counter = Counter + 1
+            'skip to next comma
+            Text = LaserKnife(Text, Divider)
+        Case 2  'next
+            EvalBefore Evaluated, BeforeTag
+            Counter = Counter + 1
+        'Case 1  'end
+        Case Else   'end or not found
+            ' ignore BeforeTag and AfterTag
+            Exit Do
+        End Select
+    Loop
+    
+    If Counter > 0 Then
+        ReDim out(0 To Counter - 1)
+        For i = Counter - 1 To 0 Step -1
+            out(i) = Evaluated(0)
+            Evaluated = Evaluated(1)
+        Next
+    End If
+    
+    Evaluated = out
+    EvalAfter = Not IsEmpty(Evaluated)
+End Function
+
+' 辞書のテキスト変換
+' Dic(key) = value を次のように記す
+' key1=value1
+' key2=value2
+
+Private Function DefineDictionarySymbols() As Variant
+    DefineDictionarySymbols = Array(vbCrLf, "=")
+End Function
+
+Public Function EncDictionary(Dic As Scripting.Dictionary) As String
+    Dim Tags As Variant
+    Dim Equal As String
+    Dim LineFeed As String
+    Dim Key As Variant
+    Dim out As String
+    
+    Tags = DefineDictionarySymbols
+    LineFeed = Tags(0)
+    Equal = Tags(1)
+    out = ""
+    For Each Key In Dic.Keys
+        out = out & Key & Equal & Dic(Key) & LineFeed
+    Next
+    
+    EncDictionary = out
+End Function
+
+Public Function DecDictionary(Text As String) As Scripting.Dictionary
+    Dim Tags As Variant
+    Dim LineFeed As String
+    Dim Equal As String
+    Dim Lines As Variant
+    Dim Line As Variant
+    Dim KeyValue As Variant
+    Dim Key As String
+    Dim Value As String
+    Dim out As Scripting.Dictionary
+    
+    Tags = DefineDictionarySymbols
+    LineFeed = Tags(0)
+    Equal = Tags(1)
+    Set out = New Scripting.Dictionary
+    
+    Lines = Split(Text, LineFeed)
+    For Each Line In Lines
+        KeyValue = Split(CStr(Line), Equal, 2)
+        If UBound(KeyValue) >= 0 Then
+            Key = KeyValue(0)
+            If Key <> "" Then
+                If UBound(KeyValue) = 1 Then
+                    Value = KeyValue(1)
+                Else
+                    Value = ""
+                End If
+                out(Key) = Value
+            End If
+        End If
+    Next
+    
+    Set DecDictionary = out
+End Function
+
+'}}}
+
+'module
+'   name;HelloUrlencode
+'{{{
+Option Explicit
+
+' URL Encode
+
+' references
+' http://www.faqs.org/rfcs/rfc2396.html
+' http://www.kinet.or.jp/hiromin/cgi_introduction/appendix/url_encode.html
+
+' 変換の対象外とする文字は、最小限のものを採用し、次のとおりとする。
+' 英数字、.(x2e)、-(x2d)、_(x5f)
+'
+' 特殊扱いの変換は、 " "(x20) を +(x2b) にすること。
+'
+' 残りは %xx 表記
+
+Private Sub test1()
+    Dim enc As Variant
+    Dim tb As Variant
+    Dim s As String
+    Dim t As String
+    Dim p As Variant
+    Dim q As Scripting.Dictionary
+    
+    s = "E3 81 8A E5 B8 B0 E3 82 8A E3 81 AA E3 81 95 E3 81 84 E3 81 BE E3 81 9B 20 30 39 41 5A 61 7A 2E 2D 5F"
+    tb = DecHexDelimited(s)
+    Debug.Print EncUrlBytes(tb)
+    Debug.Print EncHexDelimited(DecUrlBytes(EncUrlBytes(tb)))
+    Debug.Print IIf(s & " " = EncHexDelimited(DecUrlBytes(EncUrlBytes(tb))), "OK", "NG")
+    
+    s = "お帰りなさいませ 09AZaz.-_"
+    Debug.Print EncUrlString(s)
+    Debug.Print DecUrlString(EncUrlString(s))
+    
+    For Each enc In Array("utf-8", "iso-2022-jp", "shift_jis", "euc-jp")
+        Debug.Print CStr(enc)
+        Debug.Print EncUrlString(s, CStr(enc))
+        Debug.Print DecUrlString(EncUrlString(s, CStr(enc)), CStr(enc))
+        Debug.Print IIf(s = DecUrlString(EncUrlString(s, CStr(enc)), CStr(enc)), "OK", "NG")
+    Next
+    
+    t = "((q,url エンコード,),(hl,ja,),(山,川,),)"
+    p = DecVariantArray(t)
+    Debug.Print EncVariantArray(p)
+    s = EncUrlParameters(p)
+    Debug.Print s
+    Debug.Print DecUrlParametersValue(s, "q")
+    Debug.Print DecUrlParametersValue(s, "hl")
+    Debug.Print DecUrlParametersValue(s, "山")
+    Debug.Print IIf(t = EncVariantArray(DecUrlParametersArray(s)), "OK", "NG")
+    
+    Set q = DecUrlParameters(s)
+    Debug.Print EncDictionary(q)
+    Debug.Print EncUrlParameters(q)
+    Debug.Print IIf(s = EncUrlParameters(q), "OK", "NG")
+    q.RemoveAll
+    Set q = Nothing
+    
+    ' check the issue 1
+    Debug.Print EncUrlBytes(Array(&HD))
+    Debug.Print EncUrlBytes(DecHexDelimited("0 1 2 3 4 5 6 7 8 9 A B C D E F 10"))
+    Debug.Print IIf("%0D" = EncUrlBytes(Array(&HD)), "OK", "NG")
+    
+    ' check null
+    Debug.Print EncUrlString("")
+    Debug.Print DecUrlString("")
+End Sub
+
+
+' key=value の集合（ハッシュデータ）を URL エンコードする
+' Scripting.Dictionary 形式と、Variant Array ((key1,value1), (key2,value2), ,,,) 形式を受け取る
+' 文字列を受け取ったときは、 http://www.....com/?one_value_only のように解釈する。
+
+Function EncUrlParameters(Params As Variant, Optional Charset = "utf-8") As String
+    Dim Key As Variant
+    Dim Value As Variant
+    Dim KeyValue As Variant
+    Dim out As String
+    
+    out = ""
+    If IsEmpty(Params) Then
+        ' exit now
+    ElseIf IsObject(Params) Then
+        For Each Key In Params.Keys
+            Value = Params(Key)
+            If Not out = "" Then out = out & "&"
+            out = out & EncUrlString(CStr(Key), Charset) & "=" & EncUrlString(CStr(Value), Charset)
+        Next
+    ElseIf IsArray(Params) Then
+        For Each KeyValue In Params
+            Key = KeyValue(0)
+            Value = KeyValue(1)
+            If Not out = "" Then out = out & "&"
+            out = out & EncUrlString(CStr(Key), Charset) & "=" & EncUrlString(CStr(Value), Charset)
+        Next
+    Else
+        out = EncUrlString(CStr(Params), Charset)
+    End If
+    EncUrlParameters = out
+End Function
+
+' key=value の集合（ハッシュデータ）として URL デコードする
+' key を１つ受け取り、それに対応する value 値だけをテキストで返す。
+
+Function DecUrlParametersValue(Text As String, Key As String, Optional Charset = "utf-8") As String
+    Dim KeyValue As Scripting.Dictionary
+    
+    Set KeyValue = DecUrlParameters(Text, Charset)
+    DecUrlParametersValue = KeyValue(Key)
+    
+    KeyValue.RemoveAll
+    Set KeyValue = Nothing
+End Function
+
+' key=value の集合（ハッシュデータ）として URL デコードする
+' Scripting.Dictionary 形式を返す。
+
+Function DecUrlParameters(Text As String, Optional Charset = "utf-8") As Scripting.Dictionary
+    Dim KeyValue As Variant
+    Dim out As Scripting.Dictionary
+    Set out = New Scripting.Dictionary
+    
+    For Each KeyValue In DecUrlParametersArray(Text, Charset)
+        out(KeyValue(0)) = KeyValue(1)
+    Next
+    
+    Set DecUrlParameters = out
+End Function
+
+' key=value の集合（ハッシュデータ）として URL デコードする
+' Variant Array ((key1,value1), (key2,value2), ,,,) 形式を返す。
+
+Function DecUrlParametersArray(Text As String, Optional Charset = "utf-8") As Variant
+    Dim Params As Variant
+    Dim Param As Variant
+    Dim KeyValue As Variant
+    Dim Key As String
+    Dim Value As String
+    Dim Counter As Long
+    Dim i As Long
+    Dim pan As Variant
+    Dim out() As Variant
+    
+    pan = Empty
+    Counter = 0
+    
+    Params = Split(Text, "&")
+    For Each Param In Params
+        If Param <> "" Then
+            KeyValue = Split(CStr(Param), "=", 2)
+            Key = DecUrlString(CStr(KeyValue(0)), Charset)
+            If UBound(KeyValue) = 1 Then
+                Value = DecUrlString(CStr(KeyValue(1)), Charset)
+            Else
+                Value = ""
+            End If
+            pan = Array(Array(Key, Value), pan)
+            Counter = Counter + 1
+        End If
+    Next
+
+    If Counter > 0 Then
+        ReDim out(0 To Counter - 1)
+        For i = Counter - 1 To 0 Step -1
+            out(i) = pan(0)
+            pan = pan(1)
+        Next
+    End If
+    
+    DecUrlParametersArray = out
+End Function
+
+' 文字列を URL エンコードする
+
+Function EncUrlString(Text As String, Optional Charset = "utf-8") As String
+    Dim bs As Variant
+    Dim Stream As ADODB.Stream
+    
+    If Text = "" Then Exit Function
+    
+    Set Stream = New ADODB.Stream
+    Stream.Open
+    Stream.Charset = Charset
+    Stream.WriteText Text
+    
+    Stream.Position = 0
+    Stream.Type = adTypeBinary
+    
+    ' skip 3 bytes BOM
+    If Charset = "utf-8" Then Stream.Position = 3
+    
+    bs = Stream.Read
+    Stream.Close
+    Set Stream = Nothing
+    
+    EncUrlString = EncUrlBytes(bs)
+End Function
+
+' 文字列を URL デコードする
+
+Function DecUrlString(Text As String, Optional Charset = "utf-8") As String
+    Dim Stream As ADODB.Stream
+    
+    If Text = "" Then Exit Function
+    
+    Set Stream = New ADODB.Stream
+    Stream.Open
+    Stream.Type = adTypeBinary
+    Stream.Write DecUrlBytes(Text)
+    
+    Stream.Position = 0
+    Stream.Type = adTypeText
+    Stream.Charset = Charset
+    DecUrlString = Stream.ReadText
+    
+    Stream.Close
+    Set Stream = Nothing
+End Function
+
+' バイト列を URL エンコードする
+
+Function EncUrlBytes(Data As Variant, Optional ByVal Length As Long = -1) As String
+    Dim out As String
+    Dim i As Long
+    
+    out = ""
+    If Length = -1 Then Length = UBound(Data) + 1
+    For i = 0 To Length - 1
+        Select Case Data(i)
+        Case &H20   '" "
+            out = out & "+"
+        Case &H30 To &H39, &H41 To &H5A, &H61 To &H7A, &H2E, &H2D, &H5F '"0" To "9", "A" To "Z", "a" To "z", ".", "-", "_"
+            out = out & Chr(Data(i))
+        Case Is < &H10
+            out = out & "%0" & Hex(Data(i))
+        Case Else
+            out = out & "%" & Hex(Data(i))
+        End Select
+    Next
+    
+    EncUrlBytes = out
+End Function
+
+' バイト列を URL デコードする
+
+Function DecUrlBytes(Text As String) As Byte()
+    Dim out() As Byte
+    Dim pan As Variant
+    Dim Ps As Variant
+    Dim i As Long
+    Dim Counter As Long
+    
+    If Text = "" Then Exit Function
+    
+    pan = Empty
+    Counter = 0
+    Ps = Split(Replace(Text, "+", " "), "%")
+    ' Ps(0)   : all raw characters
+    ' Ps(1) - : the first pair bytes make a byte char, the left are raw characters
+    
+    pan = StackPushAscii(pan, CStr(Ps(0)), Counter)
+    For i = 1 To UBound(Ps)
+        If Len(Ps(i)) >= 2 Then
+            pan = Array(CByte("&H" & Left(Ps(i), 2)), pan)
+            Counter = Counter + 1
+            pan = StackPushAscii(pan, Mid(Ps(i), 3), Counter)
+        Else
+            pan = StackPushAscii(pan, CStr(Ps(i)), Counter)
+        End If
+    Next
+    
+    If Counter > 0 Then
+        ReDim out(0 To Counter - 1)
+        For i = Counter - 1 To 0 Step -1
+            out(i) = pan(0)
+            pan = pan(1)
+        Next
+    End If
+    
+    DecUrlBytes = out
+End Function
+
+' 文字列を１文字ずつ分解して、そのユニコード値をスタックに積む
+
+Function StackPushAscii(Stack As Variant, Text As String, ByRef Counter As Long) As Variant
+    Dim i As Long
+    Dim pan As Variant
+    
+    pan = Stack
+    For i = 1 To Len(Text)
+        pan = Array(AscW(Mid(Text, i, 1)), pan)
+        Counter = Counter + 1
+    Next
+    
+    StackPushAscii = pan
+End Function
+
+'}}}
+
+'module
+'   name;DoNotepad
+'{{{
+Option Explicit
+ 
+Private Const GW_CHILD = 5
+Private Const WM_SETTEXT = &HC
+Private Const WM_GETTEXT = &HD
+Private Const WM_GETTEXTLENGTH = &HE
+Private Const WM_CLOSE = &H10
+Private Const EM_REPLACESEL = &HC2
+Private Const EM_SETSEL = &HB1
+Private Const EM_SETMODIFY = &HB9
+Private Const HWND_BOTTOM = 1
+Private Const HWND_TOP = 0
+Private Const HWND_TOPMOST = -1
+Private Const HWND_NOTOPMOST = -2
+Private Const SWP_NOSIZE = &H1
+Private Const SWP_NOMOVE = &H2
+Private Const SW_RESTORE = 9
+ 
+Private Declare Function FindWindowEx Lib "user32" Alias "FindWindowExA" (ByVal hWnd1 As Long, ByVal hWnd2 As Long, ByVal lpsz1 As String, ByVal lpsz2 As String) As Long
+Private Declare Function GetWindowThreadProcessId Lib "user32" (ByVal hWnd As Long, lpdwProcessId As Long) As Long
+Private Declare Function SetWindowText Lib "user32" Alias "SetWindowTextA" (ByVal hWnd As Long, ByVal lpString As String) As Long
+Private Declare Function GetWindow Lib "user32" (ByVal hWnd As Long, ByVal wCmd As Long) As Long
+Private Declare Function ShowWindow Lib "user32" (ByVal hWnd As Long, ByVal nCmdShow As Long) As Long
+Private Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Private Declare Function SendMessageStr Lib "user32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Any) As Long
+Private Declare Function MoveWindow Lib "user32" (ByVal hWnd As Long, ByVal x As Long, ByVal y As Long, ByVal nWidth As Long, ByVal nHeight As Long, ByVal bRepaint As Long) As Long
+Private Declare Function SetWindowPos Lib "user32" (ByVal hWnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long) As Long
+ 
+
+' clear the save me flag
+Public Function SetSavedNotepad(hWnd As Long) As Long
+    Dim i As Long
+    i = GetWindow(hWnd, GW_CHILD)
+    SendMessage i, EM_SETMODIFY, 0, 0
+    SetSavedNotepad = i
+End Function
+ 
+' close the notepad
+Public Sub CloseNotepad(hWnd As Long)
+    SetSavedNotepad hWnd
+    SendMessage hWnd, WM_CLOSE, 0, 0
+End Sub
+ 
+' kick up a new notepad process, return the hWnd
+Public Function OpenNotepad(Optional iWindowState As Long = vbNormalFocus, _
+            Optional NameMe As String = "") As Long
+    Dim hWnd As Long
+    Dim ProcID As Long
+    Dim i As Long
+    Dim TitleText As String
+    Dim ExePath As String
+    
+    On Error GoTo Err1
+    
+    TitleText = " - notepad - meets VBA"
+    ExePath = "notepad.exe"
+    
+    ProcID = Shell(ExePath, iWindowState)
+    If ProcID = 0 Then GoTo Err1
+    
+    hWnd = GetWindowByProcessId(ProcID)
+    If hWnd = 0 Then GoTo Err1
+    
+    TitleText = IIf(NameMe = "", ProcID, NameMe) & TitleText
+    i = SetWindowText(hWnd, TitleText)
+    'MoveWindow hWnd, 0, 50, 300, 200, 1
+    ' SetWindowPos can be used to change Z-order
+    'SetWindowPos hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
+    OpenNotepad = hWnd
+    Exit Function
+Err1:
+    MsgBox "failed to start a notepad", vbExclamation Or vbOKOnly, Err.Number & " " & Err.Description
+    OpenNotepad = 0
+End Function
+
+' repalce text at the notepad
+Public Function WriteNotepad(hWnd As Long, strTextAll As String) As Boolean
+    Dim i As Long
+    i = GetWindow(hWnd, GW_CHILD)
+    WriteNotepad = _
+        (0 <> SendMessageStr(i, WM_SETTEXT, 0, strTextAll))
+End Function
+ 
+' push text into the notepad with a linefeed
+' iPos=0: at a cursor position
+'     -1: at the first
+'      1: at the last
+Public Function WriteLineNotepad(hWnd As Long, strText As String, Optional iPos As Long = 0) As Boolean
+    WriteLineNotepad = WriteTextNotepad(hWnd, strText & vbNewLine, iPos)
+End Function
+ 
+' push text into the notepad without a linefeed
+' iPos=0: at a cursor position
+'     -1: at the first
+'      1: at the last
+Public Function WriteTextNotepad(hWnd As Long, strText As String, Optional iPos As Long = 0) As Boolean
+    Dim i As Long
+    i = GetWindow(hWnd, GW_CHILD)
+    Select Case iPos
+    Case -1
+        SendMessage i, EM_SETSEL, 0, 0
+    Case 1
+        SendMessage i, EM_SETSEL, 0, -1     ' select all
+        SendMessage i, EM_SETSEL, -1, 0     ' unselect (let the cursor move to the end of the selection)
+    End Select
+    WriteTextNotepad = _
+        (0 <> SendMessageStr(i, EM_REPLACESEL, 0, strText))
+End Function
+ 
+' get text from the notepad
+Public Function ReadNotepad(hWnd As Long) As String
+    Dim i As Long
+    Dim j As Long
+    Dim x As String
+    i = GetWindow(hWnd, GW_CHILD)
+    j = 1 + SendMessage(i, WM_GETTEXTLENGTH, 0, 0)
+    x = String(j, Chr(0))
+    SendMessageStr i, WM_GETTEXT, j, x
+    ReadNotepad = x
+End Function
+
+' get text length from the notepad
+Public Function ReadNotepadLength(hWnd As Long) As Long
+    Dim i As Long
+    Dim j As Long
+    i = GetWindow(hWnd, GW_CHILD)
+    j = SendMessage(i, WM_GETTEXTLENGTH, 0, 0)
+    ReadNotepadLength = j
+End Function
+
+' get a ProcessID from hWnd
+Public Function GetWindowProcessId(hWnd As Long) As Long
+    Dim ProcID As Long
+    Dim ThreadID As Long
+    ThreadID = GetWindowThreadProcessId(hWnd, ProcID)
+    GetWindowProcessId = ProcID
+End Function
+
+' get an hWnd from ProcessID (Notepad only)
+Public Function GetWindowByProcessId(ProcessId As Long, _
+        Optional TaskName As String = "Notepad", _
+        Optional TitleText As String = vbNullString) As Long
+    Dim ProcID As Long
+    Dim ThreadID As Long
+    Dim hWnd As Long
+
+    hWnd = 0
+    Do
+        hWnd = FindWindowEx(0, hWnd, TaskName, TitleText)
+        If hWnd = 0 Then Exit Do
+        ThreadID = GetWindowThreadProcessId(hWnd, ProcID)
+    Loop Until ProcessId = ProcID
+    
+    GetWindowByProcessId = hWnd
+End Function
+
+' notify user to see the notepad described with the hWnd
+Public Function ShowNotepad(hWnd As Long) As Boolean
+    Dim Result As Long
+    Result = SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE)
+    ShowWindow hWnd, SW_RESTORE
+    ShowNotepad = (Result <> 0)
+End Function
+
+'}}}
+
+'code
+'   name;ThisWorkbook
+'{{{
+Option Explicit
+
+Private Sub Workbook_Open()
+    BaumMain.BarInitialize
+    BaumMain.InitializeIeHelper
+    'EnableShortCutKey
+End Sub
+
+Private Sub Workbook_BeforeClose(Cancel As Boolean)
+    'DisableShortCutKey
+    BaumMain.TerminateIeHelper
+    BaumMain.BarTerminate
+End Sub
+
+'}}}
+
+'ssf-end
+
